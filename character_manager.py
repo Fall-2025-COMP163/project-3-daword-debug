@@ -50,10 +50,12 @@ def create_character(name, character_class):
         "Cleric": {"health": 100, "strength": 10, "magic": 15}
     }
 
+    # Before creating the character, check if the class exists
     if character_class not in valid_classes:
         raise InvalidCharacterClassError(f"Invalid class: {character_class}")
 
     stats = valid_classes[character_class]
+    # Build the character as a dictionary
     return {
         "name": name,
         "class": character_class,
@@ -69,6 +71,9 @@ def create_character(name, character_class):
         "completed_quests": []
     }
 
+# ============================================================================ 
+# SAVE / LOAD FUNCTIONS
+# ============================================================================ 
 
 def save_character(character, save_directory="data/save_games"):
     """
@@ -83,18 +88,24 @@ def save_character(character, save_directory="data/save_games"):
         PermissionError, IOError: if file cannot be written
     """
     # TODO: Implement save functionality
-    # Create save_directory if it doesn't exist
-    # Handle any file I/O errors appropriately
-    # Lists should be saved as comma-separated values
-    os.makedirs(save_directory, exist_ok=True)
+    # Make sure the save folder exists. If it doesn't, Python creates it.
+    # 'exist_ok=True' prevents errors if the folder is already there.
+    os.makedirs(save_directory, exist_ok=True)  # used ai to import directories
 
+    # Create a file name using the character's name.
     filename = f"{character['name']}_save.txt"
+
+    # Join the folder path and file name into a full file path.
     filepath = os.path.join(save_directory, filename)
 
+    # Convert lists into simple comma-separated text.
+    # Text files can't store lists directly, so I turn them into strings.
     inventory_str = ",".join(character["inventory"])
     active_quests_str = ",".join(character["active_quests"])
     completed_quests_str = ",".join(character["completed_quests"])
 
+    # Open the file in write mode ("w"). If the file doesn't exist, Python creates it.
+    # Using 'with' automatically closes the file when we're done.
     with open(filepath, "w") as f:
         f.write(f"NAME: {character['name']}\n")
         f.write(f"CLASS: {character['class']}\n")
@@ -110,7 +121,6 @@ def save_character(character, save_directory="data/save_games"):
         f.write(f"COMPLETED_QUESTS: {completed_quests_str}\n")
 
     return True
-
 
 def load_character(character_name, save_directory="data/save_games"):
     """
@@ -129,61 +139,72 @@ def load_character(character_name, save_directory="data/save_games"):
         InvalidSaveDataError: if data format is wrong
     """
     # TODO: Implement load functionality
-    # Check if file exists → CharacterNotFoundError
-    # Try to read file → SaveFileCorruptedError
-    # Validate data format → InvalidSaveDataError
-    # Parse comma-separated lists back into Python lists
+    # Build the full path to the character's save file
     filepath = os.path.join(save_directory, f"{character_name}_save.txt")
 
+    # Check if the file exists
     if not os.path.exists(filepath):
         raise CharacterNotFoundError(f"Save file for '{character_name}' not found.")
 
+    # Try to read the file
     try:
         with open(filepath, "r") as f:
             lines = f.readlines()
     except Exception as e:
         raise SaveFileCorruptedError(f"Could not read save file: {e}")
 
+    # List of all fields we expect to find in a save file
     expected_keys = {
         "NAME", "CLASS", "LEVEL", "HEALTH", "MAX_HEALTH",
         "STRENGTH", "MAGIC", "EXPERIENCE", "GOLD",
         "INVENTORY", "ACTIVE_QUESTS", "COMPLETED_QUESTS"
     }
 
-    data = {}
+    data = {}  # empty dictionary for key values
+
+    # check for mistakes
     for line in lines:
         if ":" not in line:
+            # If a line doesn't have a colon, the file is broken
             raise InvalidSaveDataError("Malformed line in save file.")
+
+        # Split the line into key and value at the first colon
         key, value = line.strip().split(":", 1)
-        key, value = key.strip(), value.strip()
+        key, value = key.strip(), value.strip()  # Remove extra spaces
+
+        # Check if the key is one of the expected fields
         if key not in expected_keys:
             raise InvalidSaveDataError(f"Unexpected key in save file: {key}")
-        data[key] = value
 
+        data[key] = value  # Store the value in the dictionary
+
+    # Make sure all required fields are present
     missing_fields = expected_keys - data.keys()
     if missing_fields:
         raise InvalidSaveDataError(f"Missing fields in save data: {missing_fields}")
 
+    # Convert text values to the correct types
     try:
         character = {
-            "name": data["NAME"],
-            "class": data["CLASS"],
-            "level": int(data["LEVEL"]),
-            "health": int(data["HEALTH"]),
-            "max_health": int(data["MAX_HEALTH"]),
-            "strength": int(data["STRENGTH"]),
-            "magic": int(data["MAGIC"]),
-            "experience": int(data["EXPERIENCE"]),
-            "gold": int(data["GOLD"]),
+            "name": data["NAME"],  # Already text
+            "class": data["CLASS"],  # Already text
+            "level": int(data["LEVEL"]),  # Convert string to integer
+            "health": int(data["HEALTH"]),  # Convert string to integer
+            "max_health": int(data["MAX_HEALTH"]),  # Convert string to integer
+            "strength": int(data["STRENGTH"]),  # Convert string to integer
+            "magic": int(data["MAGIC"]),  # Convert string to integer
+            "experience": int(data["EXPERIENCE"]),  # Convert string to integer
+            "gold": int(data["GOLD"]),  # Convert string to integer
+            # Convert comma-separated strings back to lists. If empty, use empty list
             "inventory": data["INVENTORY"].split(",") if data["INVENTORY"] else [],
             "active_quests": data["ACTIVE_QUESTS"].split(",") if data["ACTIVE_QUESTS"] else [],
             "completed_quests": data["COMPLETED_QUESTS"].split(",") if data["COMPLETED_QUESTS"] else []
         }
     except ValueError:
+        # If conversion fails, the save file has bad numbers
         raise InvalidSaveDataError("Numeric fields in save data contain invalid values.")
 
     return character
-
 
 def list_saved_characters(save_directory="data/save_games"):
     """
@@ -193,15 +214,19 @@ def list_saved_characters(save_directory="data/save_games"):
         List of character names (without _save.txt extension)
     """
     # TODO: Implement this function
-    # Return empty list if directory doesn't exist
-    # Extract character names from filenames
+    import os  # Needed to work with folders and files
+
+    # If the save folder does not exist, return an empty list
     if not os.path.exists(save_directory):
         return []
 
+    # List all files in the save folder
     files = os.listdir(save_directory)
-    character_names = [f[:-9] for f in files if f.endswith("_save.txt")]
-    return character_names 
 
+    # Filter only files that end with "_save.txt" and remove that suffix
+    character_names = [f[:-9] for f in files if f.endswith("_save.txt")]
+
+    return character_names
 
 def delete_character(character_name, save_directory="data/save_games"):
     """
@@ -214,12 +239,21 @@ def delete_character(character_name, save_directory="data/save_games"):
         CharacterNotFoundError: if character doesn't exist
     """
     # TODO: Implement character deletion
-    # Verify file exists before attempting deletion
+    import os  # Needed to work with files
+
+    # Build the path to the character's save file
     filepath = os.path.join(save_directory, f"{character_name}_save.txt")
+
+    # Check if the file exists
     if not os.path.exists(filepath):
+        # Raise an error if the character save does not exist
         raise CharacterNotFoundError(f"Character '{character_name}' not found.")
+
+    # Delete the file
     os.remove(filepath)
-    return True
+
+    return True  # Return True to indicate deletion was successful
+
 
 
 # ============================================================================ 
