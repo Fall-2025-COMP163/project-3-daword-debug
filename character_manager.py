@@ -90,9 +90,9 @@ def save_character(character, save_directory="data/save_games"):
     # TODO: Implement save functionality
     # Make sure the save folder exists. If it doesn't, Python creates it.
     # 'exist_ok=True' prevents errors if the folder is already there.
+    validate_character_data(character)
     os.makedirs(save_directory, exist_ok=True)  # used ai to import directories
 
-    validate_character_data(character)
 
     # Create a file name using the character's name.
     filename = f"{character['name']}_save.txt"
