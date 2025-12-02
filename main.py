@@ -11,7 +11,7 @@ Demonstrates module integration and complete game flow.
 """
 
 # Import all our custom modules
-import character_manager
+import character_manager 
 import inventory_system
 import quest_handler
 import combat_system
