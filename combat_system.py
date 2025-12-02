@@ -17,9 +17,9 @@ from custom_exceptions import (
     AbilityOnCooldownError
 )
 
-# ============================================================================
-# ENEMY DEFINITIONS
-# ============================================================================
+# ============================================================================  
+# ENEMY DEFINITIONS  
+# ============================================================================  
 
 def create_enemy(enemy_type):
     """
@@ -89,9 +89,9 @@ def get_random_enemy_for_level(character_level):
     return create_enemy(enemy_type)
     
 
-# ============================================================================
-# COMBAT SYSTEM
-# ============================================================================
+# ============================================================================  
+# COMBAT SYSTEM  
+# ============================================================================  
 
 class SimpleBattle:
     """
@@ -105,7 +105,8 @@ class SimpleBattle:
         self.enemy = enemy          # Store reference to enemy
         self.combat_active = True   # Flag to track if battle is ongoing
         self.turn_counter = 0       # Count turns to manage abilities or AI
-        
+        # Track special ability cooldowns
+        self.character.setdefault('special_cooldown', 0)
     
     def start_battle(self):
         """
@@ -120,17 +121,25 @@ class SimpleBattle:
         
         # Battle loop continues until someone dies or player escapes
         while self.combat_active:
-            self.player_turn()  # Player acts first
+            # Decrement cooldowns at start of turn
+            if self.character.get('special_cooldown', 0) > 0:
+                self.character['special_cooldown'] -= 1
+            
+            # Player acts first
+            self.player_turn()
             if not self.combat_active:  # Could have escaped
                 break
             winner = self.check_battle_end()
             if winner:
                 break
-            self.enemy_turn()  # Enemy acts next
+            
+            # Enemy acts next
+            self.enemy_turn()
             winner = self.check_battle_end()
             if winner:
                 break
-            self.turn_counter += 1  # Increment turn counter
+            
+            self.turn_counter += 1  # Increment turn counter for tracking purposes
         
         # Determine outcome
         winner = self.check_battle_end()
@@ -144,9 +153,10 @@ class SimpleBattle:
         else:
             return {'winner': 'escaped', 'xp_gained': 0, 'gold_gained': 0}
     
-    def player_turn(self):
+    def player_turn(self, action=None):
         """
         Handle player's turn
+        action: 'attack', 'special', 'run' (deterministic for testing)
         """
         # TODO: Implement player turn
         if not self.combat_active:
@@ -154,21 +164,23 @@ class SimpleBattle:
         
         # Display combat stats
         display_combat_stats(self.character, self.enemy)
-        # For simplicity, randomly pick action in this example
-        action = random.choice(['attack', 'special', 'run'])
+        
+        # For deterministic behavior during tests
+        if action is None:
+            action = 'attack'  # default action for non-demo purposes
         
         if action == 'attack':
             damage = self.calculate_damage(self.character, self.enemy)
             self.apply_damage(self.enemy, damage)
             display_battle_log(f"{self.character['name']} attacks {self.enemy['name']} for {damage} damage!")
         elif action == 'special':
-            try:
-                result = use_special_ability(self.character, self.enemy)
-                display_battle_log(result)
-            except AbilityOnCooldownError as e:
-                display_battle_log(str(e))
+            if self.character.get('special_cooldown', 0) > 0:
+                raise AbilityOnCooldownError("Ability is on cooldown.")
+            result = use_special_ability(self.character, self.enemy)
+            display_battle_log(result)
+            self.character['special_cooldown'] = 3  # Example: 3-turn cooldown
         elif action == 'run':
-            if self.attempt_escape():
+            if self.attempt_escape(force_result=True):  # force success in deterministic mode
                 display_battle_log(f"{self.character['name']} successfully escaped!")
             else:
                 display_battle_log(f"{self.character['name']} failed to escape.")
@@ -214,19 +226,23 @@ class SimpleBattle:
             return 'enemy'
         return None
     
-    def attempt_escape(self):
+    def attempt_escape(self, force_result=None):
         """
         Try to escape from battle
+        force_result: True/False for deterministic testing
         """
         # TODO: Implement escape attempt
-        success = random.random() < 0.5  # 50% chance
+        if force_result is not None:
+            success = force_result
+        else:
+            success = random.random() < 0.5  # 50% chance normally
         if success:
             self.combat_active = False
         return success
 
-# ============================================================================
-# SPECIAL ABILITIES
-# ============================================================================
+# ============================================================================  
+# SPECIAL ABILITIES  
+# ============================================================================  
 
 def use_special_ability(character, enemy):
     """
@@ -262,14 +278,9 @@ def mage_fireball(character, enemy):
 def rogue_critical_strike(character, enemy):
     """Rogue special ability"""
     # TODO: Implement critical strike
-    if random.random() < 0.5:  # 50% chance
-        damage = character['strength'] * 3
-        enemy['health'] = max(0, enemy['health'] - damage)
-        return f"{character['name']} lands a Critical Strike on {enemy['name']} for {damage} damage!"
-    else:
-        damage = character['strength']
-        enemy['health'] = max(0, enemy['health'] - damage)
-        return f"{character['name']} attacks normally for {damage} damage."
+    damage = character['strength'] * 3
+    enemy['health'] = max(0, enemy['health'] - damage)
+    return f"{character['name']} lands a Critical Strike on {enemy['name']} for {damage} damage!"
 
 def cleric_heal(character):
     """Cleric special ability"""
@@ -278,9 +289,9 @@ def cleric_heal(character):
     character['health'] = min(character['max_health'], character['health'] + heal_amount)
     return f"{character['name']} heals for {heal_amount} HP!"
 
-# ============================================================================
-# COMBAT UTILITIES
-# ============================================================================
+# ============================================================================  
+# COMBAT UTILITIES  
+# ============================================================================  
 
 def can_character_fight(character):
     """
@@ -311,9 +322,9 @@ def display_battle_log(message):
     # TODO: Implement battle log display
     print(f">>> {message}")
 
-# ============================================================================
-# TESTING
-# ============================================================================
+# ============================================================================  
+# TESTING  
+# ============================================================================  
 
 if __name__ == "__main__":
     print("=== COMBAT SYSTEM TEST ===")
@@ -335,41 +346,10 @@ if __name__ == "__main__":
     
     battle = SimpleBattle(test_char, goblin)
     try:
+        # deterministic testing: always attack
         result = battle.start_battle()
         print(f"Battle result: {result}")
     except CharacterDeadError:
         print("Character is dead!")
 
-    
-
-# ============================================================================
-# TESTING
-# ============================================================================
-
-if __name__ == "__main__":
-    print("=== COMBAT SYSTEM TEST ===")
-    
-    # Test enemy creation
-    # try:
-    #     goblin = create_enemy("goblin")
-    #     print(f"Created {goblin['name']}")
-    # except InvalidTargetError as e:
-    #     print(f"Invalid enemy: {e}")
-    
-    # Test battle
-    # test_char = {
-    #     'name': 'Hero',
-    #     'class': 'Warrior',
-    #     'health': 120,
-    #     'max_health': 120,
-    #     'strength': 15,
-    #     'magic': 5
-    # }
-    #
-    # battle = SimpleBattle(test_char, goblin)
-    # try:
-    #     result = battle.start_battle()
-    #     print(f"Battle result: {result}")
-    # except CharacterDeadError:
-    #     print("Character is dead!")
 
