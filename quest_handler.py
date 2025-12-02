@@ -274,4 +274,4 @@ if __name__ == "__main__":
         print("Quest accepted!")
         display_character_quest_progress(test_char, test_quests)
     except QuestRequirementsNotMetError as e:
-        print(f"Cannot accept quest: {e}")
+        print(f"Cannot accept quest: {e}") 
