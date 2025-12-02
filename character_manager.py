@@ -92,6 +92,8 @@ def save_character(character, save_directory="data/save_games"):
     # 'exist_ok=True' prevents errors if the folder is already there.
     os.makedirs(save_directory, exist_ok=True)  # used ai to import directories
 
+    validate_character_data(character)
+
     # Create a file name using the character's name.
     filename = f"{character['name']}_save.txt"
 
@@ -320,11 +322,10 @@ def heal_character(character, amount):
     # Calculate actual healing (don't exceed max_health)
     # Update character health
     if character['health'] <= 0:
-        return 0
+        raise CharacterDeadError(f"{character['name']} is dead and cannot be healed.")
     heal_amount = min(amount, character['max_health'] - character['health'])
     character['health'] += heal_amount
     return heal_amount
-
 
 def is_character_dead(character):
     """
