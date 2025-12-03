@@ -99,17 +99,17 @@ This project encourages creativity! Here's what you can customize:
 
 **This module is provided complete.** It defines all custom exceptions you'll use throughout the project.
 
-### Module 2: game_data.py (10 points)
+### Module 2: game_data.py (10 points) Loads, parses, and validates quests and items from data/quests.txt and data/items.txt. Handles default file creation if missing.
 
-### Module 3: character_manager.py (15 points)
+### Module 3: character_manager.py (15 points) Handles character creation, leveling, stat management, and saving/loading character data.
 
-### Module 4: inventory_system.py (10 points)
+### Module 4: inventory_system.py (10 points) Manages inventory operations: adding/removing items, using consumables, equipping weapons/armor, and shop transactions.
 
-### Module 5: quest_handler.py (10 points)
+### Module 5: quest_handler.py (10 points) Manages quests: accepting, completing, abandoning, and tracking progress. Also validates prerequisites and provides quest statistics.
+ 
+### Module 6: combat_system.py (10 points) Implements battle mechanics, including random enemy encounters, turn-based attacks, and outcome resolution.
 
-### Module 6: combat_system.py (10 points)
-
-### Module 7: main.py (5 points)
+### Module 7: main.py (5 points) Entry point. Implements the main menu, game loop, in-game menus (inventory, quests, shop), exploration, and save/load functionality.
 
 ## Automated Testing & Validation (60 Points)
 
@@ -129,8 +129,17 @@ Document your project with:
 
 1. **Module Architecture:** Explain your module organization
 2. **Exception Strategy:** Describe when/why you raise specific exceptions
-3. **Design Choices:** Justify major decisions
-4. **AI Usage:** Detail what AI assistance you used
+3. **Design Choices:** Justify major decisions 
+#Each​‍​‌‍​‍‌​‍​‌‍​‍‌ system (data, inventory, quests, combat, characters) functions independently, which makes debugging and adding features much easier. Every piece of quest/item data is checked to avoid runtime errors. Characters are not allowed to pick up quests or put on items if they haven't met all the requirements. In case quests.txt or items.txt files are not there, default files will be created automatically so that the game can be played at any time. The system is designed to allow the use of consumables, weapons, armor, and shop transactions. Stat changes are made on the fly from the equipped items. Keeps a record of the quests that are active and done, thus, it is able to control the prerequisites and figure out the progress percentages and rewards. The main and in-game menus are user-friendly, thus players can explore, fight, manage their inventory, and save/load games with ​‍​‌‍​‍‌​‍​‌‍​‍‌ease.
+4. **AI Usage:** 
+#Detail what AI assistance you used 
+#The​‍​‌‍​‍‌​‍​‌‍​‍‌ module creation, the proper exception handling, and the clean parsing logic for #quests/items were facilitated by AI (ChatGPT).
+
+AI was instrumental in the planning of modular interactions between the inventory, quests, and combat systems.
+
+AI came up with the idea of testing strategies for module integration and error handling.
+
+Every piece of AI-generated code was checked, experimented with, and tailored so as to be in line with the course requirements and the personal design ​‍​‌‍​‍‌​‍​‌‍​‍‌decisions.
 5. **How to Play:** Instructions for running the game
 
 ### What to Submit:
